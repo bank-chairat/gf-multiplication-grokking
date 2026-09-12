@@ -51,7 +51,7 @@ def main():
     plt.tight_layout()
 
     # Save the figure for the GitHub repository.
-    plt.savefig("grokking_curve.png", dpi=200)
+    plt.savefig("results/run_gf16_curve.png", dpi=200)
 
     plt.show()
 
