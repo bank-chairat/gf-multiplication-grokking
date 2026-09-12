@@ -123,13 +123,12 @@ def run_experiment(
     last_train_acc = 0.0
     last_test_acc = 0.0
 
-    for step in pbar:
+        for step in pbar:
         model.train()
         opt.zero_grad()
 
         # Accumulate the full-batch gradient in chunks.
         n_train = len(y_train)
-        total_train_loss = 0.0
 
         for start in range(0, n_train, chunk_size):
             end = min(start + chunk_size, n_train)
@@ -151,8 +150,6 @@ def run_experiment(
             chunk_loss = loss * (batch_size / n_train)
 
             chunk_loss.backward()
-
-            total_train_loss += chunk_loss.item()
 
         opt.step()
 
