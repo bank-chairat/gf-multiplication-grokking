@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from tqdm.auto import tqdm
 
 from dataset import build_gf_mult_dataset
 from model import GrokTransformer
@@ -82,7 +83,15 @@ def run_experiment(
     }
 
     # Full-batch training over the selected training pairs.
-    for step in range(n_steps):
+    pbar = tqdm(
+        range(n_steps),
+        desc=f"Training GF(2^{m})",
+    )
+
+    last_train_acc = 0.0
+    last_test_acc = 0.0
+
+    for step in pbar:
         model.train()
 
         opt.zero_grad()
@@ -116,5 +125,13 @@ def run_experiment(
             history["test_acc"].append(test_acc)
             history["train_loss"].append(loss.item())
             history["test_loss"].append(test_loss)
+
+            last_train_acc = train_acc
+            last_test_acc = test_acc
+
+        pbar.set_postfix(
+            train_acc=f"{last_train_acc:.3f}",
+            test_acc=f"{last_test_acc:.3f}",
+        )
 
     return model, history, GF
