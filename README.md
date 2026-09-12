@@ -132,6 +132,9 @@ part of a gradual trend, we swept field size m=4 through m=9.
 - **m=8 (GF256):** the gap shrinks substantially. All three seeds tested
   converged cleanly and showed only a small, brief train/test lag rather than
   a sustained plateau.
+
+  ![GF(256) curves, seeds 2 and 3](results/run_gf256_seeds_2_3_curve.png)
+  
 - **m=9 (GF512):** `experiments/run_gf512_partial.py`, a partial,
   unconverged check (1500 steps, final train/test accuracy ~39%/35%). The
   shape so far shows train and test rising almost together, with a small,
