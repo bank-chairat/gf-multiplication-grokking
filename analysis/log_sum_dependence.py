@@ -179,13 +179,22 @@ def diagonal_ratio_test(
 ):
     """Measure how strongly logits depend on log(a) + log(b).
 
+    Works for any field size GF(2^m); the model and GF object passed in
+    determine which field is analyzed. Used across multiple field sizes
+    (GF(16) through GF(1024)) to check whether this dependence holds
+    consistently as field size grows.
+
     The log-table hypothesis predicts that for nonzero field elements:
 
         log(a * b) = log(a) + log(b) mod (q - 1)
 
     Therefore, if the model has learned a functionally equivalent
     log/antilog computation, pairs with the same log(a) + log(b)
-    should have similar output-logit vectors.
+    should have similar output-logit vectors -- i.e. grouping pairs by
+    their log-sum and measuring within-group variance should give a
+    much lower ratio (relative to overall variance) than grouping pairs
+    randomly, which serves as a control for the grouping procedure
+    itself introducing any variance reduction.
 
     Returns:
         log_sum_ratio:
@@ -195,6 +204,7 @@ def diagonal_ratio_test(
         random_ratio:
             The same quantity for a random control grouping.
     """
+    
     dlog, antilog = build_discrete_log_tables(GF)
 
     logit_grid = build_logit_grid(
