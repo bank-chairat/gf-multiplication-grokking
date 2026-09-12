@@ -152,3 +152,47 @@ training set before weight decay forces it toward the generalizing solution.
 As the dataset grows (256 pairs at m=4 versus 65,536 pairs at m=8), full
 memorization becomes harder and slower, naturally narrowing the window in
 which a memorize-then-generalize split can occur.
+
+## Related work
+
+Nanda, Chan, Lieberum, Smith, and Steinhardt (2023), "Progress measures for
+grokking via mechanistic interpretability" (arXiv:2301.05217). The foundational
+result showing that transformers trained on modular addition learn a
+Fourier-based "Clock" circuit, representing numbers as points on a circle and
+implementing addition via rotation. This paper's methodology (reverse
+engineering a learned circuit via Fourier analysis of weights and activations)
+directly motivated this project's approach.
+
+"Grokking Finite-Dimensional Algebra" (arXiv:2602.19533, ICML 2026). A general
+framework studying grokking across finite-dimensional algebras, including
+finite fields, using a structure-tensor formalism to represent an algebra's
+multiplication as a bilinear map. This project's specific question, comparing
+the learned circuit to the real hardware log/antilog table implementation for
+GF(2^m), is more applied and specific than this general framework.
+
+"Circuit Synchronization Precedes Generalization: A Causal Precursor to
+Grokking." Introduces a metric (Frequency Synchronization Degree) that
+predicts grokking onset before it happens, based on the synchronization of
+Fourier sub-circuits during training, and shows this precursor is causal via
+targeted weight decay interventions. Not directly used in this project's
+analysis scripts, but part of the background motivating the overall
+methodology and the framing of grokking as a circuit-formation process.
+
+Zhong, Liu, Tegmark, and Andreas (2023), "The Clock and the Pizza: Two
+Stories in Mechanistic Explanation of Neural Networks" (arXiv:2306.17844).
+Shows that networks trained on the same modular addition task can converge on
+qualitatively different internal algorithms ("Clock" versus "Pizza") depending
+on hyperparameters and initialization, both achieving perfect accuracy. Cited
+here as background for why a negative result on one specific hypothesis (the
+Clock pattern in this project's GF(16) embeddings) does not rule out the
+model having learned a different, equally valid internal algorithm.
+
+## Reproducing this work
+
+All experiments were run on Google Colab (free tier, using a T4 GPU for
+GF(256) and larger field sizes; CPU is sufficient for GF(16) through GF(128)).
+See the individual scripts in `experiments/` for the exact hyperparameters
+used to produce each result.
+
+Dependencies: `torch`, `galois`, `numpy`, `matplotlib`, `tqdm` (see
+`requirements.txt`).
