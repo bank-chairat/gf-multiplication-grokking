@@ -124,6 +124,23 @@ def ablate_frequencies(grid, k, mode="top", seed=0):
 
 
 def main():
+    """Test whether the model's output logits depend causally on
+    discrete-log frequency structure.
+
+    GF(2^m) multiplication reduces to addition on a cyclic group via
+    discrete logarithms: a * b = antilog((log(a) + log(b)) mod (2^m - 1)).
+    This script tests whether the model's output behavior reflects that
+    structure, by examining the full grid of output logits indexed by
+    log(a) and log(b) rather than by a and b themselves.
+
+    If the model's correct predictions depend on structure in this
+    discrete-log-indexed logit surface, then removing the dominant
+    Fourier frequency components of that surface should break its
+    accuracy, while removing an equal number of random, non-dominant
+    frequencies should not -- since only the dominant frequencies would
+    be doing genuine computational work.
+    """
+    
     m = 4
     checkpoint_path = "model_gf16.pt"
 
