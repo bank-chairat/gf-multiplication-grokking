@@ -141,7 +141,7 @@ part of a gradual trend, we swept field size m=4 through m=9.
   fairly steady gap (~0.05), consistent with the shrinking-gap trend
   continuing, but not confirmed to convergence.
 
-  ![GF(512) partial curve](results/run_gf512_seed0_curve.png)
+  ![GF(512) partial curve](results/run_gf512_curve.png)
 
 **Overall interpretation:** the grokking gap is strong and consistent for
 m=4-7, then shrinks substantially starting at m=8, with m=9's partial data
