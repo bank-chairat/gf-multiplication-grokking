@@ -28,12 +28,11 @@ for i, seed in enumerate([2, 3]):
     axes[i].plot(h["step"], h["train_acc"], label="train")
     axes[i].plot(h["step"], h["test_acc"], label="test")
 
-    axes[i].set_title(f"GF(256), seed={seed}")
+    axes[i].set_title(f"GF(256) seed={seed}")
     axes[i].set_xlabel("step")
     axes[i].legend()
 
 axes[0].set_ylabel("accuracy")
 
-plt.suptitle("GF(256) (m=8): Additional Seeds")
 plt.tight_layout()
 plt.show()
