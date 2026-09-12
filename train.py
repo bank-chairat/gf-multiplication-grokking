@@ -16,6 +16,7 @@ def run_experiment(
     seed=0,
     log_every=100,
     device="cpu",
+    chunk_size=20000,
 ):
     """Train a transformer to predict multiplication in GF(2^m).
 
@@ -28,6 +29,8 @@ def run_experiment(
         seed: Random seed for NumPy and PyTorch.
         log_every: Number of steps between evaluations.
         device: Device on which to run the experiment.
+        chunk_size: Number of examples processed per chunk during
+            training and evaluation. Smaller values use less memory.
 
     Returns:
         model: Trained GrokTransformer.
@@ -46,6 +49,7 @@ def run_experiment(
     # Randomly split the complete table into train and test sets.
     idx = np.random.permutation(N)
     split = int(train_frac * N)
+
     train_idx = idx[:split]
     test_idx = idx[split:]
 
@@ -82,7 +86,35 @@ def run_experiment(
         "test_loss": [],
     }
 
-    # Full-batch training over the selected training pairs.
+    def evaluate(a_data, b_data, y_data):
+        """Evaluate loss and accuracy in memory-safe chunks."""
+        total_loss = 0.0
+        correct = 0
+        total = len(y_data)
+
+        with torch.no_grad():
+            for start in range(0, total, chunk_size):
+                end = min(start + chunk_size, total)
+
+                logits = model(
+                    a_data[start:end],
+                    b_data[start:end],
+                )
+
+                loss = loss_fn(
+                    logits,
+                    y_data[start:end],
+                )
+
+                batch_size = end - start
+
+                total_loss += loss.item() * batch_size
+                correct += (
+                    logits.argmax(-1) == y_data[start:end]
+                ).sum().item()
+
+        return correct / total, total_loss / total
+
     pbar = tqdm(
         range(n_steps),
         desc=f"Training GF(2^{m})",
@@ -93,37 +125,57 @@ def run_experiment(
 
     for step in pbar:
         model.train()
-
         opt.zero_grad()
 
-        logits = model(a_train, b_train)
-        loss = loss_fn(logits, y_train)
+        # Accumulate the full-batch gradient in chunks.
+        n_train = len(y_train)
+        total_train_loss = 0.0
 
-        loss.backward()
+        for start in range(0, n_train, chunk_size):
+            end = min(start + chunk_size, n_train)
+
+            logits = model(
+                a_train[start:end],
+                b_train[start:end],
+            )
+
+            batch_size = end - start
+
+            loss = loss_fn(
+                logits,
+                y_train[start:end],
+            )
+
+            # Weight each chunk so the accumulated gradient
+            # matches the full training-set mean loss.
+            chunk_loss = loss * (batch_size / n_train)
+
+            chunk_loss.backward()
+
+            total_train_loss += chunk_loss.item()
+
         opt.step()
 
-        # Evaluate periodically rather than after every optimization step.
+        # Evaluate periodically.
         if step % log_every == 0 or step == n_steps - 1:
             model.eval()
 
-            with torch.no_grad():
-                train_logits = model(a_train, b_train)
-                test_logits = model(a_test, b_test)
+            train_acc, train_loss = evaluate(
+                a_train,
+                b_train,
+                y_train,
+            )
 
-                train_acc = (
-                    train_logits.argmax(-1) == y_train
-                ).float().mean().item()
-
-                test_acc = (
-                    test_logits.argmax(-1) == y_test
-                ).float().mean().item()
-
-                test_loss = loss_fn(test_logits, y_test).item()
+            test_acc, test_loss = evaluate(
+                a_test,
+                b_test,
+                y_test,
+            )
 
             history["step"].append(step)
             history["train_acc"].append(train_acc)
             history["test_acc"].append(test_acc)
-            history["train_loss"].append(loss.item())
+            history["train_loss"].append(train_loss)
             history["test_loss"].append(test_loss)
 
             last_train_acc = train_acc
